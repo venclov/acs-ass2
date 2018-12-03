@@ -374,7 +374,7 @@ public class BookStoreTest {
 		Set<BookCopy> copiesToAdd = new HashSet<>();
 		copiesToAdd.add(new BookCopy(TEST_ISBN, 1));
 
-		new Thread(() -> {
+		Thread c1 =new Thread(() -> {
 			try {
 				client.buyBooks(booksToBuy);
 				client.buyBooks(booksToBuy);
@@ -382,22 +382,31 @@ public class BookStoreTest {
 			} catch (BookStoreException e) {
 				e.printStackTrace();
 			}
-		}).start();
+		});
 
-		new Thread(() -> {
+		Thread c2 = new Thread(() -> {
 			try {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 				storeManager.addCopies(copiesToAdd);
 				storeManager.addCopies(copiesToAdd);
 				storeManager.addCopies(copiesToAdd);
 			} catch (BookStoreException e) {
 				e.printStackTrace();
 			}
-		}).start();
+		});
+
+		c1.start();
+		c2.start();
+//		try {
+//			c1.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		try {
+//			c2.join();
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+
 
 		// Get books in store.
 		List<StockBook> listBooks = storeManager.getBooks();
