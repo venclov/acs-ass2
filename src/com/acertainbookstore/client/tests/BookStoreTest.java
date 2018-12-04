@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -374,13 +376,15 @@ public class BookStoreTest {
 		Set<BookCopy> copiesToAdd = new HashSet<>();
 		copiesToAdd.add(new BookCopy(TEST_ISBN, 1));
 
-		Thread c1 =new Thread(() -> {
+
+		Thread c1 = new Thread(() -> {
 			try {
 				client.buyBooks(booksToBuy);
 				client.buyBooks(booksToBuy);
 				client.buyBooks(booksToBuy);
 			} catch (BookStoreException e) {
 				e.printStackTrace();
+				fail();
 			}
 		});
 
@@ -391,27 +395,18 @@ public class BookStoreTest {
 				storeManager.addCopies(copiesToAdd);
 			} catch (BookStoreException e) {
 				e.printStackTrace();
+				fail();
 			}
 		});
 
 		c1.start();
 		c2.start();
-//		try {
-//			c1.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
-//		try {
-//			c2.join();
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//		}
 
 
 		// Get books in store.
 		List<StockBook> listBooks = storeManager.getBooks();
 
-		// Make sure the lists equal each other.
+		// Make sure the we have the same number of books
 		assertEquals(5,listBooks.get(0).getNumCopies());
 	}
 	/**
