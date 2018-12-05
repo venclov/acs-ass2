@@ -122,7 +122,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
 			}
 		}
 		finally {
-			lock.writeLock().lock();
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -159,7 +159,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
 			}
 		}
 		finally {
-			lock.writeLock().lock();
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -209,7 +209,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
             }
         }
         finally {
-		    lock.writeLock().lock();
+		    lock.writeLock().unlock();
         }
 	}
 
@@ -292,7 +292,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
                     .collect(Collectors.toList());
         }
         finally {
-		    lock.readLock().lock();
+		    lock.readLock().unlock();
         }
 	}
 
@@ -320,7 +320,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
 					.collect(Collectors.toList());
 		}
 		finally {
-			lock.readLock().lock();
+			lock.readLock().unlock();
 		}
 	}
 
@@ -371,7 +371,7 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
                     .collect(Collectors.toList());
         }
         finally {
-		    lock.readLock().lock();
+		    lock.readLock().unlock();
         }
 	}
 
@@ -411,7 +411,13 @@ public class SingleLockConcurrentCertainBookStore implements BookStore, StockMan
 	 * @see com.acertainbookstore.interfaces.StockManager#removeAllBooks()
 	 */
 	public void removeAllBooks() throws BookStoreException {
-		bookMap.clear();
+		lock.writeLock().lock();
+		try {
+			bookMap.clear();
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/*
