@@ -30,7 +30,7 @@ public class TwoLevelLockingConcurrentCertainBookStore implements BookStore, Sto
 	private Map<Integer, BookStoreBook> bookMap = null;
 
 	/**
-	 * Instantiates a new {@link CertainBookStore}.
+	 * Instantiates a new .
 	 */
 	public TwoLevelLockingConcurrentCertainBookStore() {
 		// Constructors are not synchronized
