@@ -44,7 +44,7 @@ public class BookStoreTest {
 	private static boolean localTest = true;
 
 	/** Single lock test */
-	private static boolean singleLock = false;
+	private static boolean singleLock = true;
 
 	
 	/** The store manager. */
@@ -427,7 +427,7 @@ public class BookStoreTest {
 	@Test
 	public void test2() throws BookStoreException{
 
-		int parameter = 50;
+		int parameter = 200;
 
 		//remove default books
 		storeManager.removeAllBooks();
@@ -451,18 +451,19 @@ public class BookStoreTest {
 		booksToAdd.add(book_3);
 		storeManager.addBooks(booksToAdd);
 
-		// creating a set of book copies to buy: one copy of default book
+		// creating a set of book copies to buy: one copy of each book from trilogy
 		HashSet<BookCopy> booksToBuy = new HashSet<BookCopy>();
 		booksToBuy.add(new BookCopy(3044532, 1));
 		booksToBuy.add(new BookCopy(3044533, 1));
 		booksToBuy.add(new BookCopy(3044534, 1));
 
 
-		// creating a set of book copies to add: one copy of default book
+		// creating a set of book copies to add: one copy of each book from trilogy
 		Set<BookCopy> copiesToAdd = new HashSet<>();
 		copiesToAdd.add(new BookCopy(3044532, 1));
 		copiesToAdd.add(new BookCopy(3044533, 1));
 		copiesToAdd.add(new BookCopy(3044534, 1));
+		final boolean[] thread_ex = new boolean[0];
 
 		Thread c1 = new Thread(() -> {
 			try {
@@ -470,9 +471,9 @@ public class BookStoreTest {
 					client.buyBooks(booksToBuy);
 					storeManager.addCopies(copiesToAdd);
 				}
-			} catch (final Throwable t) {
-
-				throw new RuntimeException(t);
+			} catch (BookStoreException e) {
+				e.printStackTrace();
+				fail();
 			}
 		});
 
@@ -481,32 +482,11 @@ public class BookStoreTest {
 		booksToGet.add(3044533);
 		booksToGet.add(3044534);
 
-//		Thread c2 = new Thread(() -> {
-//			try {
-//				for(int i=1; i<20; i++){
-//					List<StockBook> listOfBooks = storeManager.getBooks();
-//					assertTrue((listOfBooks.get(0).getNumCopies() == NUM_COPIES &&
-//							listOfBooks.get(1).getNumCopies() == NUM_COPIES &&
-//							listOfBooks.get(2).getNumCopies() == NUM_COPIES) ||
-//							(listOfBooks.get(0).getNumCopies() == 4 &&
-//									listOfBooks.get(0).getNumCopies() == 4 &&
-//									listOfBooks.get(0).getNumCopies() == 4));
-//
-//
-//				}
-//			} catch (final Throwable t) {
-//				fail();
-//				throw new RuntimeException(t);
-//
-//
-//			}
-//		});
-
 		c1.start();
-//		c2.start();
 
 		for(int i=1; i<parameter; i++) {
-			List<StockBook> listOfBooks = storeManager.getBooks();
+			List<StockBook> listOfBooks = storeManager.getBooksByISBN(booksToGet);
+
 			assertTrue((listOfBooks.get(0).getNumCopies() == NUM_COPIES &&
 					listOfBooks.get(1).getNumCopies() == NUM_COPIES &&
 					listOfBooks.get(2).getNumCopies() == NUM_COPIES) ||
@@ -518,10 +498,104 @@ public class BookStoreTest {
 
 	}
 
-	@Test
-	public void test3() throws BookStoreException {
+//	@Test
+//	public void test3() throws BookStoreException {
+//
+//	    int parameter = 50;
+//
+//        // creating a set of book copies to add: one copy of default book
+//        Set<BookCopy> copiesToAdd = new HashSet<>();
+//        copiesToAdd.add(new BookCopy(TEST_ISBN, 1));
+//
+//        Thread c1 = new Thread(() -> {
+//            try {
+//                for(int i=0; i<parameter; i++) {
+//                    storeManager.addCopies(copiesToAdd);
+//                }
+//            } catch (final Throwable t) {
+//                throw new RuntimeException(t);
+//            }
+//        });
+//
+//        Thread c2 = new Thread(() -> {
+//            try {
+//                for(int i=0; i<parameter; i++) {
+//                    storeManager.addCopies(copiesToAdd);
+//                }
+//            } catch (final Throwable t) {
+//                throw new RuntimeException(t);
+//            }
+//        });
+//
+//        c1.start();
+//        c2.start();
+//        try {
+//            c1.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        try {
+//            c2.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Set<Integer> booksToGet = new HashSet<>();
+//        booksToGet.add(TEST_ISBN);
+//
+//        List<StockBook> listOfBooks = storeManager.getBooksByISBN(booksToGet);
+//
+//        assertEquals(105,listOfBooks.get(0).getNumCopies());
+//
+//
+//
+//	}
+//
+//	@Test
+//	public void test4() throws BookStoreException{
+//
+//		int parameter = 50;
+//
+//		// creating a set of book copies to buy: one copy of default book
+//		HashSet<BookCopy> booksToBuy_1 = new HashSet<BookCopy>();
+//		booksToBuy_1.add(new BookCopy(TEST_ISBN, 3));
+//
+//		// creating a set of book copies to buy: one copy of default book
+//		HashSet<BookCopy> booksToBuy_2 = new HashSet<BookCopy>();
+//		booksToBuy_2.add(new BookCopy(TEST_ISBN, 7));
+//
+//		// creating a set of book copies to add: one copy of default book
+//		Set<BookCopy> copiesToAdd_1 = new HashSet<>();
+//		copiesToAdd_1.add(new BookCopy(TEST_ISBN, 3));
+//
+//		// creating a set of book copies to add: one copy of default book
+//		Set<BookCopy> copiesToAdd_2 = new HashSet<>();
+//		copiesToAdd_2.add(new BookCopy(TEST_ISBN, 7));
+//
+//		Thread c1 = new Thread(() -> {
+//			try {
+//				for(int i=0; i<parameter; i++) {
+//					storeManager.addCopies(copiesToAdd_1);
+//					assertEquals(storeManager.getBooksByISBN().get(0).getNumCopies());
+//					client.buyBooks(booksToBuy_1);
+//				}
+//			} catch (final Throwable t) {
+//				throw new RuntimeException(t);
+//			}
+//		});
+//
+//		Thread c2 = new Thread(() -> {
+//			try {
+//				for(int i=0; i<parameter; i++) {
+//					storeManager.addCopies(copiesToAdd_1);
+//				}
+//			} catch (final Throwable t) {
+//				throw new RuntimeException(t);
+//			}
+//		});
+//
 
-	}
+
 	/**
 	 * Tear down after class.
 	 *

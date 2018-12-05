@@ -2,6 +2,8 @@ package com.acertainbookstore.business;
 
 import com.acertainbookstore.utils.BookStoreUtility;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /**
  * {@link BookStoreBook} implements all parts of the book. Only parts of it are
  * available in the bookstore client and stock manager, cf. the {@link Book} and
@@ -12,6 +14,9 @@ import com.acertainbookstore.utils.BookStoreUtility;
  * @see ImmutableBook
  */
 public class BookStoreBook extends ImmutableBook {
+
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
 
 	/** The number of copies. */
 	private int numCopies;
@@ -75,7 +80,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the total rating
 	 */
 	public long getTotalRating() {
-		return totalRating;
+		lock.readLock().lock();
+		try {
+			return totalRating;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -84,7 +95,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the number of times rated
 	 */
 	public long getNumTimesRated() {
-		return numTimesRated;
+		lock.readLock().lock();
+		try {
+			return numTimesRated;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -93,7 +110,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the number of copies
 	 */
 	public int getNumCopies() {
-		return numCopies;
+		lock.readLock().lock();
+		try {
+			return numCopies;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -102,7 +125,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the number of sale misses
 	 */
 	public long getNumSaleMisses() {
-		return numSaleMisses;
+		lock.readLock().lock();
+		try {
+			return numSaleMisses;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -111,7 +140,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return the average rating
 	 */
 	public float getAverageRating() {
-		return (numTimesRated == 0 ? -1.0f : (float) totalRating / numTimesRated);
+		lock.readLock().lock();
+		try {
+			return (numTimesRated == 0 ? -1.0f : (float) totalRating / numTimesRated);
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -120,7 +155,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return true, if it is editor picked
 	 */
 	public boolean isEditorPick() {
-		return editorPick;
+		lock.readLock().lock();
+		try {
+			return editorPick;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -130,7 +171,13 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the new total rating
 	 */
 	private void setTotalRating(long totalRating) {
-		this.totalRating = totalRating;
+		lock.writeLock().lock();
+		try {
+			this.totalRating = totalRating;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -140,7 +187,13 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the new number of times rated
 	 */
 	private void setNumTimesRated(long numTimesRated) {
-		this.numTimesRated = numTimesRated;
+		lock.writeLock().lock();
+		try {
+			this.numTimesRated = numTimesRated;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -150,18 +203,30 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the new number of copies
 	 */
 	private void setNumCopies(int numCopies) {
-		this.numCopies = numCopies;
+		lock.writeLock().lock();
+		try {
+			this.numCopies = numCopies;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
 	 * Sets the number of times that a client wanted to buy a book when it was
 	 * not in stock, also known as the number of sale misses.
 	 *
-	 * @param saleMisses
+	 * @param numSaleMisses
 	 *            the new sale misses
 	 */
 	private void setNumSaleMisses(long numSaleMisses) {
-		this.numSaleMisses = numSaleMisses;
+		lock.writeLock().lock();
+		try {
+			this.numSaleMisses = numSaleMisses;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -172,7 +237,13 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the new editor pick
 	 */
 	public void setEditorPick(boolean editorPick) {
-		this.editorPick = editorPick;
+		lock.writeLock().lock();
+		try {
+			this.editorPick = editorPick;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -183,7 +254,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return true, if successful
 	 */
 	public boolean areCopiesInStore(int numCopies) {
-		return this.numCopies >= numCopies;
+		lock.readLock().lock();
+		try {
+			return this.numCopies >= numCopies;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -194,9 +271,15 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return true, if successful
 	 */
 	public boolean buyCopies(int numCopies) {
+		lock.writeLock().lock();
 		if (!BookStoreUtility.isInvalidNoCopies(numCopies) && areCopiesInStore(numCopies)) {
-			this.numCopies -= numCopies;
-			return true;
+			try {
+				this.numCopies -= numCopies;
+				return true;
+			}
+			finally {
+				lock.writeLock().unlock();
+			}
 		}
 
 		return false;
@@ -209,9 +292,17 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the number of new copies
 	 */
 	public void addCopies(int numNewCopies) {
+		lock.writeLock().lock();
+		try{
 		if (!BookStoreUtility.isInvalidNoCopies(numNewCopies)) {
-			this.numCopies += numNewCopies;
-			this.numSaleMisses = 0;
+
+				this.numCopies += numNewCopies;
+				this.numSaleMisses = 0;
+			}
+
+		}
+		finally {
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -222,7 +313,13 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the number of sales misses encountered
 	 */
 	public void addSaleMiss(int numSaleMisses) {
-		this.numSaleMisses += numSaleMisses;
+		lock.writeLock().lock();
+		try {
+			this.numSaleMisses += numSaleMisses;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -232,9 +329,15 @@ public class BookStoreBook extends ImmutableBook {
 	 *            the rating
 	 */
 	public void addRating(int rating) {
+		lock.writeLock().lock();
+		try{
 		if (!BookStoreUtility.isInvalidRating(rating)) {
-			this.totalRating += rating;
-			this.numTimesRated++;
+				this.totalRating += rating;
+				this.numTimesRated++;
+			}
+		}
+		finally {
+			lock.writeLock().unlock();
 		}
 	}
 
@@ -245,7 +348,13 @@ public class BookStoreBook extends ImmutableBook {
 	 * @return true, if successful
 	 */
 	public boolean hadSaleMiss() {
-		return this.numSaleMisses > 0;
+		lock.readLock().lock();
+		try {
+			return this.numSaleMisses > 0;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**

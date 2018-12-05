@@ -1,9 +1,13 @@
 package com.acertainbookstore.business;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /**
  * {@link BookCopy} is used to represent the book and its number of copies.
  */
 public class BookCopy {
+
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 	/** The ISBN. */
 	private int isbn;
@@ -31,7 +35,13 @@ public class BookCopy {
 	 * @return the ISBN
 	 */
 	public int getISBN() {
-		return isbn;
+		lock.readLock().lock();
+		try {
+			return isbn;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -40,7 +50,13 @@ public class BookCopy {
 	 * @return the number of copies
 	 */
 	public int getNumCopies() {
-		return numCopies;
+		try {
+			lock.readLock().lock();
+			return numCopies;
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	/**
@@ -50,7 +66,13 @@ public class BookCopy {
 	 *            the new ISBN
 	 */
 	public void setISBN(int isbn) {
-		this.isbn = isbn;
+		try {
+			lock.writeLock().lock();
+			this.isbn = isbn;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -60,7 +82,13 @@ public class BookCopy {
 	 *            the new number of copies
 	 */
 	public void setNumCopies(int numCopies) {
-		this.numCopies = numCopies;
+		try {
+			lock.writeLock().lock();
+			this.numCopies = numCopies;
+		}
+		finally {
+			lock.writeLock().unlock();
+		}
 	}
 
 	/*
@@ -70,11 +98,18 @@ public class BookCopy {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || getClass() != obj.getClass()) {
-			return false;
+		lock.readLock().lock();
+		try {
+			if (obj == null || getClass() != obj.getClass()) {
+				return false;
+			}
+
+			return this.getISBN() == ((BookCopy) obj).getISBN();
+		}
+		finally {
+			lock.readLock().unlock();
 		}
 
-		return this.getISBN() == ((BookCopy) obj).getISBN();
 	}
 
 	/*
@@ -84,6 +119,12 @@ public class BookCopy {
 	 */
 	@Override
 	public int hashCode() {
-		return getISBN();
+		lock.readLock().lock();
+		try {
+			return getISBN();
+		}
+		finally {
+			lock.readLock().unlock();
+		}
 	}
 }
