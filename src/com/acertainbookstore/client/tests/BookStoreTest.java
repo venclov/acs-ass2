@@ -2,6 +2,7 @@ package com.acertainbookstore.client.tests;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -366,7 +367,7 @@ public class BookStoreTest {
 	}
 
 	@Test
-	public void test1() throws BookStoreException {
+	public void testSerializability() throws BookStoreException {
 
 		int parameter = 5;
 
@@ -423,11 +424,10 @@ public class BookStoreTest {
 		assertEquals(5,listBooks.get(0).getNumCopies());
 	}
 
-
 	@Test
-	public void test2() throws BookStoreException{
+	public void testConcurrentAtomicicty() throws BookStoreException{
 
-		int parameter = 50;
+		int parameter = 100;
 
 		//remove default books
 		storeManager.removeAllBooks();
@@ -479,32 +479,10 @@ public class BookStoreTest {
 		booksToGet.add(3044533);
 		booksToGet.add(3044534);
 
-//		Thread c2 = new Thread(() -> {
-//			try {
-//				for(int i=1; i<20; i++){
-//					List<StockBook> listOfBooks = storeManager.getBooks();
-//					assertTrue((listOfBooks.get(0).getNumCopies() == NUM_COPIES &&
-//							listOfBooks.get(1).getNumCopies() == NUM_COPIES &&
-//							listOfBooks.get(2).getNumCopies() == NUM_COPIES) ||
-//							(listOfBooks.get(0).getNumCopies() == 4 &&
-//									listOfBooks.get(0).getNumCopies() == 4 &&
-//									listOfBooks.get(0).getNumCopies() == 4));
-//
-//
-//				}
-//			} catch (final Throwable t) {
-//				fail();
-//				throw new RuntimeException(t);
-//
-//
-//			}
-//		});
-
 		c1.start();
 		if(thread_ex[0]) {
 			fail();
 		}
-//		c2.start();
 
 		for(int i=1; i<parameter; i++) {
 			List<StockBook> listOfBooks = storeManager.getBooks();
@@ -518,6 +496,115 @@ public class BookStoreTest {
 
 
 	}
+	
+	@Test
+	/**
+	 * Check for all or nothing semanthics
+	 * @throws BookStoreException
+	 */
+	public void testAllOrNothingRemove() throws BookStoreException {
+		int parameter = 50;
+		//add trylogy to the database
+		ImmutableStockBook book_1 = new ImmutableStockBook(3044532,
+				"The Lord of the Rings: The Fellowship of the Ring", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+
+		ImmutableStockBook book_2 = new ImmutableStockBook(3044533,
+				"The Lord of the Rings: The Two Towers", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+
+		ImmutableStockBook book_3 = new ImmutableStockBook(3044534,
+				"The Lord of the Rings: The Return of the King", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+
+		Set<StockBook> booksToAdd = new HashSet<StockBook>();
+		booksToAdd.add(book_1);
+		booksToAdd.add(book_2);
+		booksToAdd.add(book_3);
+		storeManager.addBooks(booksToAdd);
+
+		Set<Integer> isbnSet = new HashSet<>();
+		isbnSet.add(TEST_ISBN);
+		isbnSet.add(3044532);
+		isbnSet.add(3044533);
+		isbnSet.add(3044534);
+		isbnSet.add(1000000);
+
+		final boolean[] thread_ex = new boolean[1];
+
+		Thread c1 = new Thread(() -> {
+			try {
+				storeManager.removeBooks(isbnSet);
+				fail();
+			} catch (BookStoreException e) {
+				;
+			}
+		});
+
+		c1.start();
+
+		if(thread_ex[0]){
+			System.out.println("there was exception in thread");
+//			fail();
+		}
+
+		for(int i=1; i<parameter; i++) {
+			assertTrue(storeManager.getBooks().size() == 4);
+		}
+
+	}
+	
+	/**
+	 * a lot of threads try to update the same books
+	 */
+	@Test
+	public void testDeadlcoks() throws BookStoreException{
+		ImmutableStockBook book_1 = new ImmutableStockBook(3044532,
+				"The Lord of the Rings: The Fellowship of the Ring", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+
+		ImmutableStockBook book_2 = new ImmutableStockBook(3044533,
+				"The Lord of the Rings: The Two Towers", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+
+		ImmutableStockBook book_3 = new ImmutableStockBook(3044534,
+				"The Lord of the Rings: The Return of the King", "J. R. R. Tolkien",
+				(float) 10, NUM_COPIES, 0, 0, 0, false);
+		storeManager.removeAllBooks();
+		Set<StockBook> booksToAdd = new HashSet<StockBook>();
+		booksToAdd.add(book_1);
+		booksToAdd.add(book_2);
+		booksToAdd.add(book_3);
+		storeManager.addBooks(booksToAdd);
+		
+		// creating a set of book copies to add: one copy of default book
+		Set<BookCopy> copiesToAdd = new HashSet<>();
+		copiesToAdd.add(new BookCopy(3044532, 1));
+		copiesToAdd.add(new BookCopy(3044534, 1));
+		copiesToAdd.add(new BookCopy(3044533, 1));
+		
+		ArrayList<Thread> threads = new ArrayList<>();
+		Thread t;
+		for(int i = 0; i < 100; i++) {
+			t = new Thread(new UpdateThread(storeManager, copiesToAdd));
+			threads.add(t);
+			t.start();
+		}
+		
+		for(Thread ts : threads) {
+			try {
+				ts.join();
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+		}
+		List<StockBook> listOfBooks = storeManager.getBooks();
+		for (StockBook stockBook : listOfBooks) {
+			assertTrue(stockBook.getNumCopies() == 105);
+		}
+		
+	}
+	
 	/**
 	 * Tear down after class.
 	 *
@@ -533,6 +620,28 @@ public class BookStoreTest {
 			((StockManagerHTTPProxy) storeManager).stop();
 		}
 	}
+}
+
+class UpdateThread implements Runnable{
+	private Set<BookCopy> toAdd;
+	private StockManager manager;
+	
+	public UpdateThread(StockManager manager, Set<BookCopy> toAdd) {
+		this.manager = manager;
+		this.toAdd = toAdd;
+	}
+	
+	@Override
+	public void run() {
+		try {
+			manager.addCopies(this.toAdd);
+		} catch (BookStoreException e) {
+			// TODO Auto-generated catch block
+			fail();
+		}
+	}
+	
+	
 }
 
 
