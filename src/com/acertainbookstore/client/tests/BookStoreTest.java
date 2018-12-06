@@ -45,7 +45,7 @@ public class BookStoreTest {
 	private static boolean localTest = true;
 
 	/** Single lock test */
-	private static boolean singleLock = false;
+	private static boolean singleLock = true;
 
 	
 	/** The store manager. */
@@ -367,7 +367,7 @@ public class BookStoreTest {
 	}
 
 	@Test
-	public void testSerializability() throws BookStoreException {
+	public void test1() throws BookStoreException {
 
 		int parameter = 5;
 
@@ -590,7 +590,6 @@ public class BookStoreTest {
 			threads.add(t);
 			t.start();
 		}
-		
 		for(Thread ts : threads) {
 			try {
 				ts.join();
