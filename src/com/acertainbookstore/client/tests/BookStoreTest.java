@@ -44,7 +44,7 @@ public class BookStoreTest {
 	private static boolean localTest = true;
 
 	/** Single lock test */
-	private static boolean singleLock = true;
+	private static boolean singleLock = false;
 
 	
 	/** The store manager. */
@@ -381,7 +381,7 @@ public class BookStoreTest {
 
 		Thread c1 = new Thread(() -> {
 			try {
-				for(int i=5; i<parameter; i++) {
+				for(int i=0; i<parameter; i++) {
 					client.buyBooks(booksToBuy);
 				}
 			} catch (final Throwable t) {
@@ -391,7 +391,7 @@ public class BookStoreTest {
 
 		Thread c2 = new Thread(() -> {
 			try {
-				for(int i=5; i<parameter; i++) {
+				for(int i=0; i<parameter; i++) {
 					storeManager.addCopies(copiesToAdd);
 				}
 			} catch (final Throwable t) {
@@ -463,7 +463,8 @@ public class BookStoreTest {
 		copiesToAdd.add(new BookCopy(3044532, 1));
 		copiesToAdd.add(new BookCopy(3044533, 1));
 		copiesToAdd.add(new BookCopy(3044534, 1));
-		final boolean[] thread_ex = new boolean[0];
+
+		final boolean[] thread_ex = new boolean[1];
 
 		Thread c1 = new Thread(() -> {
 			try {
@@ -473,7 +474,7 @@ public class BookStoreTest {
 				}
 			} catch (BookStoreException e) {
 				e.printStackTrace();
-				fail();
+				thread_ex[0] = true;
 			}
 		});
 
@@ -493,6 +494,10 @@ public class BookStoreTest {
 					(listOfBooks.get(0).getNumCopies() == 4 &&
 							listOfBooks.get(0).getNumCopies() == 4 &&
 							listOfBooks.get(0).getNumCopies() == 4));
+		}
+
+		if(thread_ex[0]){
+			fail();
 		}
 
 
@@ -594,6 +599,58 @@ public class BookStoreTest {
 //			}
 //		});
 //
+//	@Test
+//	public void test5() throws BookStoreException {
+//		int parameter = 50;
+//		//add trylogy to the database
+//		ImmutableStockBook book_1 = new ImmutableStockBook(3044532,
+//				"The Lord of the Rings: The Fellowship of the Ring", "J. R. R. Tolkien",
+//				(float) 10, NUM_COPIES, 0, 0, 0, false);
+//
+//		ImmutableStockBook book_2 = new ImmutableStockBook(3044533,
+//				"The Lord of the Rings: The Two Towers", "J. R. R. Tolkien",
+//				(float) 10, NUM_COPIES, 0, 0, 0, false);
+//
+//		ImmutableStockBook book_3 = new ImmutableStockBook(3044534,
+//				"The Lord of the Rings: The Return of the King", "J. R. R. Tolkien",
+//				(float) 10, NUM_COPIES, 0, 0, 0, false);
+//
+//		Set<StockBook> booksToAdd = new HashSet<StockBook>();
+//		booksToAdd.add(book_1);
+//		booksToAdd.add(book_2);
+//		booksToAdd.add(book_3);
+//		storeManager.addBooks(booksToAdd);
+//
+//		Set<Integer> isbnSet = new HashSet<>();
+//		isbnSet.add(TEST_ISBN);
+//		isbnSet.add(3044532);
+//		isbnSet.add(3044533);
+//		isbnSet.add(3044534);
+//		isbnSet.add(9999999);
+//
+//		final boolean[] thread_ex = new boolean[1];
+//
+//		Thread c1 = new Thread(() -> {
+//			try {
+//					storeManager.removeBooks(isbnSet);
+//			} catch (BookStoreException e) {
+//				e.printStackTrace();
+//				thread_ex[0] = true;
+//			}
+//		});
+//
+//		c1.start();
+//
+//		if(thread_ex[0]){
+//			System.out.println("there was exception in thread");
+////			fail();
+//		}
+//
+//		for(int i=1; i<parameter; i++) {
+//			assertTrue(storeManager.getBooks().size() == 4 || storeManager.getBooks().size() == 0);
+//		}
+//
+//	}
 
 
 	/**
